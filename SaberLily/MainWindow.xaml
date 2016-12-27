@@ -7,6 +7,9 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        
+        <Button x:Name="login_button" Content="获取二维码" HorizontalAlignment="Left" Height="44" Margin="193,252,0,0" VerticalAlignment="Top" Width="116" Click="login_button_Click"/>
+        <Image x:Name="login_image" HorizontalAlignment="Left" Height="191" Margin="154,47,0,0" VerticalAlignment="Top" Width="219"/>
+        <Label x:Name="login_label" Content="扫码登录" HorizontalAlignment="Left" Height="23" Margin="100,10,0,0" VerticalAlignment="Top" Width="333"/>
+
     </Grid>
 </Window>

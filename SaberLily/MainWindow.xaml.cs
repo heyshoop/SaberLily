@@ -24,5 +24,11 @@ namespace SaberLily
         {
             InitializeComponent();
         }
+        //点击获取二维码
+        private void login_button_Click(object sender, RoutedEventArgs e)
+        {
+            SmartQQ qq = new SmartQQ();
+            qq.Login(login_button);
+        }
     }
 }
