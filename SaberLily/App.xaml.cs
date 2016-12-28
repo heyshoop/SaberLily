@@ -14,25 +14,21 @@ namespace SaberLily
     /// </summary>
     public partial class App : Application
     {
-        private static DispatcherOperationCallback exitFrameCallback = new DispatcherOperationCallback(ExitFrame);
-        public static void DoEvents()
+        protected override void OnStartup(StartupEventArgs e)
         {
-            DispatcherFrame nestedFrame = new DispatcherFrame();
-            DispatcherOperation exitOperation = Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, exitFrameCallback, nestedFrame);
-            Dispatcher.PushFrame(nestedFrame);
-            if (exitOperation.Status !=
-            DispatcherOperationStatus.Completed)
+            Application.Current.ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown;
+            LoginWindow window = new LoginWindow();
+            bool? dialogResult = window.ShowDialog();
+            if ((dialogResult.HasValue == true) &&
+                (dialogResult.Value == true))
             {
-                exitOperation.Abort();
+                base.OnStartup(e);
+                Application.Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
             }
-        }
-
-        private static Object ExitFrame(Object state)
-        {
-            DispatcherFrame frame = state as
-            DispatcherFrame;
-            frame.Continue = false;
-            return null;
+            else
+            {
+                this.Shutdown();
+            }
         }
     }
 }

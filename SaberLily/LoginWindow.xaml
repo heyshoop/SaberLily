@@ -1,0 +1,15 @@
+﻿<Window x:Class="SaberLily.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SaberLily"
+        mc:Ignorable="d"
+        Title="召唤Saber" Height="300" Width="320">
+    <Grid>
+        <Image x:Name="login_image" HorizontalAlignment="Left" Height="200" Margin="58,25,0,0" VerticalAlignment="Top" Width="200" Source="Resources/1.jpg"/>
+        <Button x:Name="login_button" Content="获取二维码" HorizontalAlignment="Left" Height="27" Margin="100,232,0,0" VerticalAlignment="Top" Width="110" Click="login_button_Click"/>
+        <Label x:Name="login_label" Content="Label" HorizontalAlignment="Left" Height="15" Margin="48,5,0,0" VerticalAlignment="Top" Width="210"/>
+
+    </Grid>
+</Window>
