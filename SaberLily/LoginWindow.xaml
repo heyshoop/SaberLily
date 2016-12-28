@@ -9,7 +9,7 @@
     <Grid>
         <Image x:Name="login_image" HorizontalAlignment="Left" Height="200" Margin="58,25,0,0" VerticalAlignment="Top" Width="200" Source="Resources/1.jpg"/>
         <Button x:Name="login_button" Content="获取二维码" HorizontalAlignment="Left" Height="27" Margin="100,232,0,0" VerticalAlignment="Top" Width="110" Click="login_button_Click"/>
-        <Label x:Name="login_label" Content="Label" HorizontalAlignment="Left" Height="15" Margin="48,5,0,0" VerticalAlignment="Top" Width="210"/>
+        <Label x:Name="login_label" Content="扫描二维码登录" HorizontalAlignment="Left" Height="25" Margin="48,0,0,0" VerticalAlignment="Top" Width="210" FontSize="10"/>
 
     </Grid>
 </Window>

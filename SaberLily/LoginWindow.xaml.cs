@@ -24,13 +24,12 @@ namespace SaberLily
         private static DispatcherTimer timer;
         private static Random rand = new Random();
 
-
         public LoginWindow()
         {
             InitializeComponent();
         }
 
-        //点击获取二维码
+        //登录第一步：获取登陆用二维码
         private void login_button_Click(object sender, RoutedEventArgs e)
         {
             Login();
@@ -60,7 +59,7 @@ namespace SaberLily
             catch (Exception) { return false; }
             return true;
         }
-        //每5秒检查一遍二维码
+        //登录第二步：检查二维码状态
         private void Login_QRStatuTimer_Elapsed(object sender, EventArgs e)
         {
             string dat;
@@ -68,7 +67,6 @@ namespace SaberLily
             string referer = "https://ui.ptlogin2.qq.com/cgi-bin/login?daid=164&target=self&style=16&mibao_css=m_webqq&appid=501004106&enable_qlogin=0&no_verifyimg=1 &s_url=http%3A%2F%2Fw.qq.com%2Fproxy.html&f_url=loginerroralert &strong_login=1&login_state=10&t=20131024001";
             dat = HttpClient.Get(url, referer);
             string[] temp = dat.Split('\'');
-            Console.WriteLine(temp[1]);
             switch (temp[1])
             {
                 case ("65"):
@@ -83,6 +81,8 @@ namespace SaberLily
                     break;
                 case ("0"):
                     login_label.Content = "当前登录状态：确认成功，请稍候";//已经确认
+                    Date.webqqUrl = temp[5];
+                    Console.WriteLine("webqqUrl:"+Date.webqqUrl);
                     this.DialogResult = true;
                     timer.Stop();
                     break;
