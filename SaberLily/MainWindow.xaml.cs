@@ -24,6 +24,9 @@ namespace SaberLily
     {
         private static string vfwebqq, ptwebqq, psessionid, uin, hash;
         public static FriendInfo SelfInfo = new FriendInfo();
+        public static Dictionary<string, FriendInfo> FriendList = new Dictionary<string, FriendInfo>();
+        public static string[] FriendCategories = new string[100];
+        public static Dictionary<string, string> RealQQNum = new Dictionary<string, string>();
 
         public MainWindow()
         {
@@ -148,6 +151,86 @@ namespace SaberLily
                 return Convert.ToInt64(ts.TotalSeconds).ToString();
             }
             else return "ERROR";
+        }
+        //获取好友列表
+        internal static void Info_FriendList()
+        {
+            string url = "http://s.web2.qq.com/api/get_user_friends2";
+            string sendData = string.Format("r={{\"vfwebqq\":\"{0}\",\"hash\":\"{1}\"}}", vfwebqq, hash);
+            string dat = HttpClient.Post(url, sendData, "http://s.web2.qq.com/proxy.html?v=20130916001&callback=1&id=1");
+
+            JsonFriendModel friend = (JsonFriendModel)JsonConvert.DeserializeObject(dat, typeof(JsonFriendModel));
+            for (int i = 0; i < friend.result.info.Count; i++)
+            {
+                if (!FriendList.ContainsKey(friend.result.info[i].uin))
+                    FriendList.Add(friend.result.info[i].uin, new FriendInfo());
+                FriendList[friend.result.info[i].uin].face = friend.result.info[i].face;
+                FriendList[friend.result.info[i].uin].nick = friend.result.info[i].nick;
+                Info_FriendInfo(friend.result.info[i].uin);
+            }
+            for (int i = 0; i < friend.result.friends.Count; i++)
+            {
+                if (!FriendList.ContainsKey(friend.result.friends[i].uin))
+                    FriendList.Add(friend.result.friends[i].uin, new FriendInfo());
+                FriendList[friend.result.friends[i].uin].categories = friend.result.friends[i].categories;
+            }
+            for (int i = 0; i < friend.result.categories.Count; i++)
+            {
+                FriendCategories[friend.result.categories[i].index] = friend.result.categories[i].name;
+            }
+            ReNewListBoxFriend();
+        }
+        //获取好友详细信息
+        internal static void Info_FriendInfo(string uin)
+        {
+            string url = "http://s.web2.qq.com/api/get_friend_info2?tuin=#{uin}&vfwebqq=#{vfwebqq}&clientid=53999199&psessionid=#{psessionid}&t=#{t}".Replace("#{t}", AID_TimeStamp());
+            url = url.Replace("#{uin}", uin).Replace("#{vfwebqq}", vfwebqq).Replace("#{psessionid}", psessionid);
+            string dat = HttpClient.Get(url, "http://s.web2.qq.com/proxy.html?v=20130916001&callback=1&id=1");
+            JsonFriendInfModel inf = (JsonFriendInfModel)JsonConvert.DeserializeObject(dat, typeof(JsonFriendInfModel));
+            if (!FriendList.ContainsKey(uin))
+                FriendList.Add(uin, new FriendInfo());
+            FriendList[uin].face = inf.result.face;
+            FriendList[uin].occupation = inf.result.occupation;
+            FriendList[uin].phone = inf.result.phone;
+            FriendList[uin].college = inf.result.college;
+            FriendList[uin].blood = inf.result.blood;
+            FriendList[uin].homepage = inf.result.homepage;
+            FriendList[uin].vip_info = inf.result.vip_info;
+            FriendList[uin].country = inf.result.country;
+            FriendList[uin].city = inf.result.city;
+            FriendList[uin].personal = inf.result.personal;
+            FriendList[uin].nick = inf.result.nick;
+            FriendList[uin].shengxiao = inf.result.shengxiao;
+            FriendList[uin].email = inf.result.email;
+            FriendList[uin].province = inf.result.province;
+            FriendList[uin].gender = inf.result.gender;
+            if (inf.result.birthday.year != 0 && inf.result.birthday.month != 0 && inf.result.birthday.day != 0)
+                FriendList[uin].birthday = new DateTime(inf.result.birthday.year, inf.result.birthday.month, inf.result.birthday.day);
+        }
+        //更新主界面好友列表
+        internal static void ReNewListBoxFriend()
+        {
+            listBoxFriend.Items.Clear();
+            foreach (KeyValuePair<string, FriendInfo> FriendList in FriendList)
+            {
+                listBoxFriend.Items.Add(FriendList.Key + ":" + Info_RealQQ(FriendList.Key) + ":" + FriendList.Value.nick);
+            }
+        }
+        //获取真实QQ号码
+        internal static string Info_RealQQ(string uin)
+        {
+            if (RealQQNum.ContainsKey(uin))
+                return RealQQNum[uin];
+
+            string url = "http://s.web2.qq.com/api/get_friend_uin2?tuin=#{uin}&type=1&vfwebqq=#{vfwebqq}&t=#{t}".Replace("#{uin}", uin).Replace("#{vfwebqq}", vfwebqq).Replace("#{t}", AID_TimeStamp());
+            string dat = HttpClient.Get(url);
+            string temp = dat.Split('\"')[10].Split(',')[0].Replace(":", "");
+            if (temp != "" && !RealQQNum.ContainsKey(uin))
+            {
+                RealQQNum.Add(uin, temp);
+                return temp;
+            }
+            else return "";
         }
     }
 }
