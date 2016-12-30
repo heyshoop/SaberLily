@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SaberLily"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
-    <Grid/>
+        Title="SarberLily" Height="350" Width="525">
+    <Grid>
+        <ListBox x:Name="listBoxFriend" HorizontalAlignment="Left" Height="236" Margin="37,46,0,0" VerticalAlignment="Top" Width="222"/>
+    </Grid>
 </Window>

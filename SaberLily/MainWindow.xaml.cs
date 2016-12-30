@@ -32,6 +32,7 @@ namespace SaberLily
         {
             InitializeComponent();
             Login_Process(Date.webqqUrl);
+            
         }
         //扫描二维码后处理函数
         private static void Login_Process(string url)
