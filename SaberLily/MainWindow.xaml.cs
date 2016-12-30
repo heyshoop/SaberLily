@@ -27,6 +27,9 @@ namespace SaberLily
         public static Dictionary<string, FriendInfo> FriendList = new Dictionary<string, FriendInfo>();
         public static string[] FriendCategories = new string[100];
         public static Dictionary<string, string> RealQQNum = new Dictionary<string, string>();
+        public static Dictionary<string, GroupInfo> GroupList = new Dictionary<string, GroupInfo>();
+        public static Dictionary<string, DiscussInfo> DiscussList = new Dictionary<string, DiscussInfo>();
+        private static bool Running = true;
 
         public MainWindow()
         {
@@ -35,19 +38,19 @@ namespace SaberLily
             
         }
         //扫描二维码后处理函数
-        private static void Login_Process(string url)
+        private void Login_Process(string url)
         {
             Login_GetPtwebqq(url);
             Login_GetVfwebqq();
             Login_GetPsessionid();
-            Info_FriendList();
-            Info_GroupList();
-            Info_DisscussList();
+            Info_FriendList();//获取好友列表
+            Info_GroupList();//获取群组列表
+            Info_DisscussList();//获取讨论组列表
             Info_SelfInfo();//获取账号信息
             Login_GetOnlineAndRecent_FAKE();
             Task.Run(() => Message_Request());
+            Console.WriteLine("当前登录账号为："+Date.QQNum);
 
-            m = "当前登录状态：QQ " + QQNum + "已登录";
         }
         //登录第三步：获取ptwebqq值
         private static void Login_GetPtwebqq(string url)
@@ -73,6 +76,68 @@ namespace SaberLily
             psessionid = dat.Replace(":", ",").Replace("{", "").Replace("}", "").Replace("\"", "").Split(',')[10];
             Date.QQNum = uin = dat.Replace(":", ",").Replace("{", "").Replace("}", "").Replace("\"", "").Split(',')[14];
             hash = AID_Hash(Date.QQNum, ptwebqq);
+        }
+        //登录第六步：获取在线成员、近期联系人（仅提交请求，未处理）
+        private static void Login_GetOnlineAndRecent_FAKE()
+        {
+            string url = "http://d1.web2.qq.com/channel/get_online_buddies2?vfwebqq=#{vfwebqq}&clientid=53999199&psessionid=#{psessionid}&t=#{t}".Replace("#{vfwebqq}", vfwebqq).Replace("#{psessionid}", psessionid).Replace("#{t}", AID_TimeStamp());
+            HttpClient.Get(url, "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2");
+
+            url = "http://d1.web2.qq.com/channel/get_recent_list2";
+            string url1 = "{\"vfwebqq\":\"#{vfwebqq}\",\"clientid\":53999199,\"psessionid\":\"#{psessionid}\"}".Replace("#{vfwebqq}", vfwebqq).Replace("#{psessionid}", psessionid);
+            string dat = HttpClient.Post(url, "r=" + HttpUtility.UrlEncode(url1), "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2");
+        }
+        //发送poll包，请求消息
+        private void Message_Request()
+        {
+            try
+            {
+                string url = "http://d1.web2.qq.com/channel/poll2";
+                string HeartPackdata = "{\"ptwebqq\":\"#{ptwebqq}\",\"clientid\":53999199,\"psessionid\":\"#{psessionid}\",\"key\":\"\"}";
+                HeartPackdata = HeartPackdata.Replace("#{ptwebqq}", ptwebqq).Replace("#{psessionid}", psessionid);
+                HeartPackdata = "r=" + HttpUtility.UrlEncode(HeartPackdata);
+                HttpClient.Post_Async_Action action = Message_Get;
+                HttpClient.Post_Async(url, HeartPackdata, action);
+            }
+            catch (Exception) { Message_Request(); }
+        }
+        //接收到消息的回调函数
+        private void Message_Get(string data)
+        {
+            Task.Run(() => Message_Request());
+            if (Running)
+                Task.Run(() => Message_Process(data));
+        }
+        //处理收到的消息
+        private void Message_Process(string data)
+        {
+            textBoxLog.Text = data;
+            JsonPollMessage poll = (JsonPollMessage)JsonConvert.DeserializeObject(data, typeof(JsonPollMessage));
+            if (poll.retcode != 0)
+                Message_Process_Error(poll);
+            else if (poll.result != null && poll.result.Count > 0)
+                for (int i = 0; i < poll.result.Count; i++)
+                {
+                    switch (poll.result[i].poll_type)
+                    {
+                        case "kick_message":
+                            Running = false;
+                            MessageBox.Show(poll.result[i].value.reason);
+                            break;
+                        case "message":
+                            Message_Process_Message(poll.result[i].value);
+                            break;
+                        case "group_message":
+                            Message_Process_GroupMessage(poll.result[i].value);
+                            break;
+                        case "discu_message":
+                            Message_Process_DisscussMessage(poll.result[i].value);
+                            break;
+                        default:
+                            Program.MainForm.listBoxLog.Items.Add(poll.result[i].poll_type);
+                            break;
+                    }
+                }
         }
 
         /// <summary>
@@ -154,7 +219,7 @@ namespace SaberLily
             else return "ERROR";
         }
         //获取好友列表
-        internal static void Info_FriendList()
+        internal void Info_FriendList()
         {
             string url = "http://s.web2.qq.com/api/get_user_friends2";
             string sendData = string.Format("r={{\"vfwebqq\":\"{0}\",\"hash\":\"{1}\"}}", vfwebqq, hash);
@@ -209,7 +274,7 @@ namespace SaberLily
                 FriendList[uin].birthday = new DateTime(inf.result.birthday.year, inf.result.birthday.month, inf.result.birthday.day);
         }
         //更新主界面好友列表
-        internal static void ReNewListBoxFriend()
+        internal void ReNewListBoxFriend()
         {
             listBoxFriend.Items.Clear();
             foreach (KeyValuePair<string, FriendInfo> FriendList in FriendList)
@@ -233,5 +298,172 @@ namespace SaberLily
             }
             else return "";
         }
+        //获取群列表并保存
+        internal void Info_GroupList()
+        {
+            string url = "http://s.web2.qq.com/api/get_group_name_list_mask2";
+            string sendData = string.Format("r={{\"vfwebqq\":\"{0}\",\"hash\":\"{1}\"}}", vfwebqq, hash);
+            string dat = HttpClient.Post(url, sendData, "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2");
+
+            JsonGroupModel group = (JsonGroupModel)JsonConvert.DeserializeObject(dat, typeof(JsonGroupModel));
+            for (int i = 0; i < group.result.gnamelist.Count; i++)
+            {
+                if (!GroupList.ContainsKey(group.result.gnamelist[i].gid))
+                    GroupList.Add(group.result.gnamelist[i].gid, new GroupInfo());
+                GroupList[group.result.gnamelist[i].gid].name = group.result.gnamelist[i].name;
+                GroupList[group.result.gnamelist[i].gid].code = group.result.gnamelist[i].code;
+                Info_GroupInfo(group.result.gnamelist[i].gid);
+                GetGroupSetting(group.result.gnamelist[i].gid);
+            }
+            ReNewListBoxGroup();
+        }
+        //获取群详细信息
+        internal static void Info_GroupInfo(string gid)
+        {
+            if (!GroupList.ContainsKey(gid))
+                return;
+            string gcode = GroupList[gid].code;
+            string url = "http://s.web2.qq.com/api/get_group_info_ext2?gcode=#{group_code}&vfwebqq=#{vfwebqq}&t=#{t}".Replace("#{group_code}", gcode).Replace("#{vfwebqq}", vfwebqq).Replace("#{t}", AID_TimeStamp());
+            string dat = HttpClient.Get(url, "http://s.web2.qq.com/proxy.html?v=20130916001&callback=1&id=1");
+            JsonGroupInfoModel groupInfo = (JsonGroupInfoModel)JsonConvert.DeserializeObject(dat, typeof(JsonGroupInfoModel));
+            GroupList[gid].name = groupInfo.result.ginfo.name;
+            GroupList[gid].createtime = groupInfo.result.ginfo.createtime;
+            GroupList[gid].face = groupInfo.result.ginfo.face;
+            GroupList[gid].owner = groupInfo.result.ginfo.owner;
+            GroupList[gid].memo = groupInfo.result.ginfo.memo;
+            GroupList[gid].markname = groupInfo.result.ginfo.markname;
+            GroupList[gid].level = groupInfo.result.ginfo.level;
+            for (int i = 0; i < groupInfo.result.minfo.Count; i++)
+            {
+                if (!GroupList[gid].MemberList.ContainsKey(groupInfo.result.minfo[i].uin))
+                    GroupList[gid].MemberList.Add(groupInfo.result.minfo[i].uin, new GroupInfo.MenberInfo());
+                GroupList[gid].MemberList[groupInfo.result.minfo[i].uin].city = groupInfo.result.minfo[i].city;
+                GroupList[gid].MemberList[groupInfo.result.minfo[i].uin].province = groupInfo.result.minfo[i].province;
+                GroupList[gid].MemberList[groupInfo.result.minfo[i].uin].country = groupInfo.result.minfo[i].country;
+                GroupList[gid].MemberList[groupInfo.result.minfo[i].uin].gender = groupInfo.result.minfo[i].gender;
+                GroupList[gid].MemberList[groupInfo.result.minfo[i].uin].nick = groupInfo.result.minfo[i].nick;
+            }
+            if (groupInfo.result.cards != null)
+                for (int i = 0; i < groupInfo.result.cards.Count; i++)
+                {
+                    if (!GroupList[gid].MemberList.ContainsKey(groupInfo.result.cards[i].muin))
+                        GroupList[gid].MemberList.Add(groupInfo.result.cards[i].muin, new GroupInfo.MenberInfo());
+                    GroupList[gid].MemberList[groupInfo.result.cards[i].muin].card = groupInfo.result.cards[i].card;
+                }
+            for (int i = 0; i < groupInfo.result.ginfo.members.Count; i++)
+                if (groupInfo.result.ginfo.members[i].mflag % 2 == 1)
+                    GroupList[gid].MemberList[groupInfo.result.ginfo.members[i].muin].isManager = true;
+                else GroupList[gid].MemberList[groupInfo.result.ginfo.members[i].muin].isManager = false;
+        }
+        //获取指定群的信息
+        internal void GetGroupSetting(string gid)
+        {
+            string url = Date.DicServer + "groupmanage.php?password=" + Date.DicPassword + "&action=get&gno=" + AID_GroupKey(gid);
+            string temp = HttpClient.Get(url);
+            JsonGroupManageModel GroupManageInfo = (JsonGroupManageModel)JsonConvert.DeserializeObject(temp, typeof(JsonGroupManageModel));
+            if (GroupManageInfo.statu.Equals("success"))
+            {
+                GroupList[gid].GroupManage.enable = GroupManageInfo.enable;
+                GroupList[gid].GroupManage.enableXHJ = GroupManageInfo.enablexhj;
+                GroupList[gid].GroupManage.enableWeather = GroupManageInfo.enableWeather;
+                GroupList[gid].GroupManage.enableTalk = GroupManageInfo.enabletalk;
+                GroupList[gid].GroupManage.enableStudy = GroupManageInfo.enableStudy;
+                GroupList[gid].GroupManage.enableStock = GroupManageInfo.enableStock;
+                GroupList[gid].GroupManage.enableExchangeRate = GroupManageInfo.enableExchangeRate;
+                GroupList[gid].GroupManage.enableEmoje = GroupManageInfo.enableEmoje;
+                GroupList[gid].GroupManage.enableCityInfo = GroupManageInfo.enableCityInfo;
+                GroupList[gid].GroupManage.enableWiki = GroupManageInfo.enableWiki;
+                GroupList[gid].GroupManage.enableTranslate = GroupManageInfo.enableTranslate;
+
+                if (GroupList[gid].GroupManage.enable.Equals(""))
+                    GroupList[gid].GroupManage.enable = "true";
+                if (GroupList[gid].GroupManage.enableXHJ.Equals(""))
+                    GroupList[gid].GroupManage.enableXHJ = "true";
+                if (GroupList[gid].GroupManage.enableWeather.Equals(""))
+                    GroupList[gid].GroupManage.enableWeather = "true";
+                if (GroupList[gid].GroupManage.enableTalk.Equals(""))
+                    GroupList[gid].GroupManage.enableTalk = "true";
+                if (GroupList[gid].GroupManage.enableStudy.Equals(""))
+                    GroupList[gid].GroupManage.enableStudy = "true";
+                if (GroupList[gid].GroupManage.enableStock.Equals(""))
+                    GroupList[gid].GroupManage.enableStock = "true";
+                if (GroupList[gid].GroupManage.enableExchangeRate.Equals(""))
+                    GroupList[gid].GroupManage.enableExchangeRate = "true";
+                if (GroupList[gid].GroupManage.enableEmoje.Equals(""))
+                    GroupList[gid].GroupManage.enableEmoje = "true";
+                if (GroupList[gid].GroupManage.enableCityInfo.Equals(""))
+                    GroupList[gid].GroupManage.enableCityInfo = "true";
+                if (GroupList[gid].GroupManage.enableWiki.Equals(""))
+                    GroupList[gid].GroupManage.enableWiki = "true";
+                if (GroupList[gid].GroupManage.enableTranslate.Equals(""))
+                    GroupList[gid].GroupManage.enableTranslate = "true";
+            }
+        }
+        //生成由群主QQ和群创建时间构成的群标识码
+        internal string AID_GroupKey(string gid)
+        {
+            if (!GroupList.ContainsKey(gid))
+                Info_GroupList();
+            if (GroupList.ContainsKey(gid))
+                return Info_RealQQ(GroupList[gid].owner) + ":" + GroupList[gid].createtime;
+            else return "FAIL";
+        }
+        //更新主界面的QQ群列表
+        internal void ReNewListBoxGroup()
+        {
+            listBoxGroup.Items.Clear();
+            foreach (KeyValuePair<string, GroupInfo> GroupList in GroupList)
+            {
+                listBoxGroup.Items.Add(GroupList.Key + "::" + GroupList.Value.name);
+            }
+        }
+        //获取讨论组并保存
+        internal void Info_DisscussList()
+        {
+            string url = "http://s.web2.qq.com/api/get_discus_list?clientid=53999199&psessionid=#{psessionid}&vfwebqq=#{vfwebqq}&t=#{t}".Replace("#{psessionid}", psessionid).Replace("#{vfwebqq}", vfwebqq).Replace("#{t}", AID_TimeStamp());
+            string dat = HttpClient.Get(url, "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2");
+            JsonDisscussModel disscuss = (JsonDisscussModel)JsonConvert.DeserializeObject(dat, typeof(JsonDisscussModel));
+            for (int i = 0; i < disscuss.result.dnamelist.Count; i++)
+            {
+                if (!DiscussList.ContainsKey(disscuss.result.dnamelist[i].did))
+                    DiscussList.Add(disscuss.result.dnamelist[i].did, new DiscussInfo());
+                DiscussList[disscuss.result.dnamelist[i].did].name = disscuss.result.dnamelist[i].name;
+                Info_DisscussInfo(disscuss.result.dnamelist[i].did);
+            }
+            ReNewListBoxDiscuss();
+        }
+        //获取讨论组详细信息
+        internal void Info_DisscussInfo(string did)
+        {
+            string url = "http://d1.web2.qq.com/channel/get_discu_info?did=#{discuss_id}&psessionid=#{psessionid}&vfwebqq=#{vfwebqq}&clientid=53999199&t=#{t}".Replace("#{t}", AID_TimeStamp());
+            url = url.Replace("#{discuss_id}", did).Replace("#{psessionid}", psessionid).Replace("#{vfwebqq}", vfwebqq);
+            string dat = HttpClient.Get(url, "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2");
+            JsonDisscussInfoModel inf = (JsonDisscussInfoModel)JsonConvert.DeserializeObject(dat, typeof(JsonDisscussInfoModel));
+
+            for (int i = 0; i < inf.result.mem_info.Count; i++)
+            {
+                if (!DiscussList[did].MemberList.ContainsKey(inf.result.mem_info[i].uin))
+                    DiscussList[did].MemberList.Add(inf.result.mem_info[i].uin, new DiscussInfo.MenberInfo());
+                DiscussList[did].MemberList[inf.result.mem_info[i].uin].nick = inf.result.mem_info[i].nick;
+            }
+            for (int i = 0; i < inf.result.mem_status.Count; i++)
+            {
+                if (!DiscussList[did].MemberList.ContainsKey(inf.result.mem_status[i].uin))
+                    DiscussList[did].MemberList.Add(inf.result.mem_status[i].uin, new DiscussInfo.MenberInfo());
+                DiscussList[did].MemberList[inf.result.mem_status[i].uin].status = inf.result.mem_status[i].status;
+                DiscussList[did].MemberList[inf.result.mem_status[i].uin].client_type = inf.result.mem_status[i].client_type;
+            }
+        }
+        //更新讨论组列表
+        internal void ReNewListBoxDiscuss()
+        {
+            listBoxDiscuss.Items.Clear();
+            foreach (KeyValuePair<string, DiscussInfo> DiscussList in DiscussList)
+            {
+                listBoxDiscuss.Items.Add(DiscussList.Key + ":" + DiscussList.Value.name);
+            }
+        }
+
+
     }
 }

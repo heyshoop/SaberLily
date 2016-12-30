@@ -10,6 +10,8 @@ namespace SaberLily
     {
         public static string webqqUrl;
         public static string QQNum;
+        internal static string DicPassword = "";
+        internal static string DicServer = "";
     }
     //好友资料
     public class FriendInfo
@@ -40,6 +42,58 @@ namespace SaberLily
         public int shengxiao;
         public int vip_info;
 
+        public string Messages = "";
+    }
+    //群资料
+    public class GroupInfo
+    {
+        public string name;
+        public string code;
+        public string markname;
+        public string memo;
+        public int face;
+        public string createtime;
+        public int level;
+        public string owner;
+        public GroupManageClass GroupManage = new GroupManageClass();
+        public class GroupManageClass
+        {
+            public string enable;
+            public string enableWeather;
+            public string enableExchangeRate;
+            public string enableStock;
+            public string enableStudy;
+            public string enableTalk;
+            public string enableXHJ;
+            public string enableEmoje;
+            public string enableCityInfo;
+            public string enableWiki;
+            public string enableTranslate;
+        }
+        public Dictionary<string, MenberInfo> MemberList = new Dictionary<string, MenberInfo>();
+        public class MenberInfo
+        {
+            public string nick;
+            public string country;
+            public string province;
+            public string city;
+            public string gender;
+            public string card;
+            public bool isManager;
+        }
+        public string Messages = "";
+    }
+    //讨论组
+    public class DiscussInfo
+    {
+        public string name;
+        public Dictionary<string, MenberInfo> MemberList = new Dictionary<string, MenberInfo>();
+        public class MenberInfo
+        {
+            public string nick;
+            public string status;
+            public int client_type;
+        }
         public string Messages = "";
     }
 }
