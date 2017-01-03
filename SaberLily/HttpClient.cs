@@ -87,5 +87,29 @@ namespace SaberLily
             }
             return dat;
         }
+        public delegate void Post_Async_Action(string data);
+        public static void Post_Async(string url, string PostData, Post_Async_Action action, string Referer = "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2", int timeout = 100000)
+        {
+            HttpWebRequest req = WebRequest.Create(url) as HttpWebRequest;
+            req.CookieContainer = cookies;
+            req.ContentType = "application/x-www-form-urlencoded";
+            req.Method = "POST";
+            req.Referer = Referer;
+            req.UserAgent = "Mozilla/5.0 (Windows NT 10.0;%20WOW64; rv:47.0) Gecko/20100101 Firefox/47.0";
+            req.Proxy = null;
+            req.ProtocolVersion = HttpVersion.Version10;
+            req.ContinueTimeout = timeout;
+
+            ASCIIEncoding encoding = new ASCIIEncoding();
+            byte[] data = encoding.GetBytes(PostData);
+            Stream stream = req.GetRequestStream();
+            stream.Write(data, 0, data.Length);
+            stream.Close();
+
+            Post_Async_Data dat = new Post_Async_Data();
+            dat.req = req;
+            dat.post_Async_Action = action;
+            req.BeginGetResponse(new AsyncCallback(Post_Async_ResponesProceed), dat);
+        }
     }
 }

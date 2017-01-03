@@ -30,6 +30,7 @@ namespace SaberLily
         public static Dictionary<string, GroupInfo> GroupList = new Dictionary<string, GroupInfo>();
         public static Dictionary<string, DiscussInfo> DiscussList = new Dictionary<string, DiscussInfo>();
         private static bool Running = true;
+        private static int Count103 = 0;
 
         public MainWindow()
         {
@@ -134,7 +135,7 @@ namespace SaberLily
                             Message_Process_DisscussMessage(poll.result[i].value);
                             break;
                         default:
-                            Program.MainForm.listBoxLog.Items.Add(poll.result[i].poll_type);
+                            listBoxLog.Items.Add(poll.result[i].poll_type);
                             break;
                     }
                 }
@@ -462,6 +463,92 @@ namespace SaberLily
             {
                 listBoxDiscuss.Items.Add(DiscussList.Key + ":" + DiscussList.Value.name);
             }
+        }
+        //错误信息处理
+        
+        private void Message_Process_Error(JsonPollMessage poll)
+        {
+            int TempCount103 = Count103;
+            Count103 = 0;
+            if (poll.retcode == 102)
+            {
+                return;
+            }
+            else if (poll.retcode == 103)
+            {
+                listBoxLog.Items.Insert(0, "retcode:103");
+                Count103 = TempCount103 + 1;
+                if (Count103 > 20)
+                {
+                    Running = false;
+                    MessageBox.Show("retcode:" + poll.retcode);
+                }
+                return;
+            }
+            else if (poll.retcode == 116)
+            {
+                listBoxLog.Items.Insert(0, "retcode:" + poll.retcode + poll.p);
+                ptwebqq = poll.p;
+                return;
+            }
+            else if (poll.retcode == 108 || poll.retcode == 114)
+            {
+                listBoxLog.Items.Insert(0, "retcode:" + poll.retcode);
+                Running = false;
+                MessageBox.Show("retcode:" + poll.retcode);
+                return;
+            }
+            else if (poll.retcode == 120 || poll.retcode == 121)
+            {
+                listBoxLog.Items.Insert(0, "retcode:" + poll.retcode);
+                listBoxLog.Items.Insert(0, poll.t);
+                Running = false;
+                MessageBox.Show("retcode:" + poll.retcode);
+                return;
+            }
+            else if (poll.retcode == 100006 || poll.retcode == 100003)
+            {
+                listBoxLog.Items.Insert(0, "retcode:" + poll.retcode);
+                Running = false;
+                MessageBox.Show("retcode:" + poll.retcode);
+                return;
+            }
+            listBoxLog.Items.Insert(0, "retcode:" + poll.retcode);
+        }
+        //私聊消息处理
+        private void Message_Process_Message(JsonPollMessage.paramResult.paramValue value)
+        {
+            string message = Message_Process_GetMessageText(value.content);
+            string nick = "未知";
+            if (!FriendList.ContainsKey(value.from_uin))
+                Info_FriendList();
+            if (FriendList.ContainsKey(value.from_uin))
+                nick = FriendList[value.from_uin].nick;
+            AddAndReNewTextBoxFriendChat(value.from_uin, (nick + "  " + Info_RealQQ(value.from_uin) + Environment.NewLine + message), false);
+            AnswerMessage(value.from_uin, message, 0);
+        }
+        //处理poll包中的消息数组
+        private static string Message_Process_GetMessageText(List<object> content)
+        {
+            string message = "";
+            for (int i = 1; i < content.Count; i++)
+            {
+                if (content[i].ToString().Contains("[\"cface\","))
+                    continue;
+                else if (content[i].ToString().Contains("\"face\","))
+                    message += ("{..[face" + content[i].ToString().Replace("\"face\",", "").Replace("]", "").Replace("[", "").Replace(" ", "").Replace("\r", "").Replace("\n", "") + "]..}");
+                else
+                    message += content[i].ToString();
+            }
+            message = message.Replace("\\\\n", Environment.NewLine).Replace("＆", "&");
+            return message;
+        }
+
+        internal void AddAndReNewTextBoxFriendChat(string uin, string str = "", bool ChangeCurrentUin = false)
+        {
+            FriendList[uin].Messages += str + Environment.NewLine;
+            if (ChangeCurrentUin || (listBoxFriend.SelectedItem != null && uin.Equals(listBoxFriend.SelectedItem.ToString().Split(':')[0])))
+                textBoxFriendChat.Text = FriendList[uin].Messages;
         }
 
 
