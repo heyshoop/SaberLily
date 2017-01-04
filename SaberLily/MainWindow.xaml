@@ -5,13 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SaberLily"
         mc:Ignorable="d"
-        Title="SarberLily" Height="377" Width="806">
+        Title="SarberLily" Height="457" Width="806">
     <Grid>
         <ListBox x:Name="listBoxFriend" HorizontalAlignment="Left" Height="236" Margin="10,39,0,0" VerticalAlignment="Top" Width="135"/>
         <ListBox x:Name="listBoxGroup" HorizontalAlignment="Left" Height="236" Margin="185,39,0,0" VerticalAlignment="Top" Width="131"/>
         <ListBox x:Name="listBoxDiscuss" HorizontalAlignment="Left" Height="236" Margin="360,39,0,0" VerticalAlignment="Top" Width="128"/>
         <ListBox x:Name="listBoxLog" HorizontalAlignment="Left" Height="186" Margin="541,39,0,0" VerticalAlignment="Top" Width="229"/>
-        <TextBox x:Name="textBoxFriendChat" HorizontalAlignment="Left" Height="25" Margin="10,297,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="223"/>
         <TextBox x:Name="textBoxLog" HorizontalAlignment="Left" Height="54" Margin="541,243,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="229"/>
+        <TextBox x:Name="textBoxFriendChat" HorizontalAlignment="Left" Height="45" Margin="10,309,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="223"/>
+        <TextBox x:Name="textBoxGroupChat" HorizontalAlignment="Left" Height="45" Margin="265,309,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="223"/>
+        <TextBox x:Name="textBoxDiscussChat" HorizontalAlignment="Left" Height="45" Margin="541,309,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="223"/>
     </Grid>
 </Window>

@@ -22,7 +22,6 @@ namespace SaberLily
     public partial class LoginWindow : Window
     {
         private static DispatcherTimer timer;
-        private static Random rand = new Random();
 
         public LoginWindow()
         {
@@ -51,7 +50,7 @@ namespace SaberLily
             login_button.IsEnabled = true;
             try
             {
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create("https://ssl.ptlogin2.qq.com/ptqrshow?appid=501004106&e=0&l=M&s=5&d=72&v=4&t=#{t}".Replace("#{t}", rand.NextDouble().ToString()));
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create("https://ssl.ptlogin2.qq.com/ptqrshow?appid=501004106&e=0&l=M&s=5&d=72&v=4&t=#{t}".Replace("#{t}", Date.rand.NextDouble().ToString()));
                 req.CookieContainer = HttpClient.cookies;
                 HttpWebResponse res = (HttpWebResponse)req.GetResponse();
                 login_image.Source = BitmapFrame.Create(res.GetResponseStream(), BitmapCreateOptions.None, BitmapCacheOption.OnLoad);

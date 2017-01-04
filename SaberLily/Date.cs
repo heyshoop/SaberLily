@@ -8,6 +8,13 @@ namespace SaberLily
 {
     class Date
     {
+        public static FriendInfo SelfInfo = new FriendInfo();
+        public static Dictionary<string, FriendInfo> FriendList = new Dictionary<string, FriendInfo>();
+        public static string[] FriendCategories = new string[100];
+        public static Dictionary<string, string> RealQQNum = new Dictionary<string, string>();
+        public static Dictionary<string, GroupInfo> GroupList = new Dictionary<string, GroupInfo>();
+        public static Dictionary<string, DiscussInfo> DiscussList = new Dictionary<string, DiscussInfo>();
+        public static Random rand = new Random();
         public static string webqqUrl;
         public static string QQNum;
         internal static string DicPassword = "";
