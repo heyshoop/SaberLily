@@ -23,7 +23,6 @@ namespace SaberLily
                 if (dat.text.Equals(msg) || dat.text.Contains("听不懂"))
                     return "";
                 MsgGet = dat.text;
-                Saber.AIStudy(msg, MsgGet, "TuLin");
             }
             else if (dat.code == 302000)
             {

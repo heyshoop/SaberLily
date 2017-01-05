@@ -25,7 +25,6 @@ namespace SaberLily
         private static string vfwebqq, ptwebqq, psessionid, uin, hash;
         private static bool Running = true;
         private static int Count103 = 0;
-        Saber saber = new Saber();
 
         public MainWindow()
         {
@@ -295,7 +294,7 @@ namespace SaberLily
             else return "";
         }
         //获取群列表并保存
-        internal void Info_GroupList()
+        internal static void Info_GroupList()
         {
             string url = "http://s.web2.qq.com/api/get_group_name_list_mask2";
             string sendData = string.Format("r={{\"vfwebqq\":\"{0}\",\"hash\":\"{1}\"}}", vfwebqq, hash);
@@ -352,7 +351,7 @@ namespace SaberLily
                 else Date.GroupList[gid].MemberList[groupInfo.result.ginfo.members[i].muin].isManager = false;
         }
         //获取指定群的信息
-        internal void GetGroupSetting(string gid)
+        internal static void GetGroupSetting(string gid)
         {
             string url = Date.DicServer + "groupmanage.php?password=" + Date.DicPassword + "&action=get&gno=" + AID_GroupKey(gid);
             string temp = HttpClient.Get(url);
@@ -396,7 +395,7 @@ namespace SaberLily
             }
         }
         //生成由群主QQ和群创建时间构成的群标识码
-        internal string AID_GroupKey(string gid)
+        internal static string AID_GroupKey(string gid)
         {
             if (!Date.GroupList.ContainsKey(gid))
                 Info_GroupList();
@@ -405,7 +404,7 @@ namespace SaberLily
             else return "FAIL";
         }
         //更新主界面的QQ群列表
-        internal void ReNewListBoxGroup()
+        internal static void ReNewListBoxGroup()
         {
             listBoxGroup.Items.Clear();
             foreach (KeyValuePair<string, GroupInfo> GroupList in Date.GroupList)
@@ -414,7 +413,7 @@ namespace SaberLily
             }
         }
         //获取讨论组并保存
-        internal void Info_DisscussList()
+        internal static void Info_DisscussList()
         {
             string url = "http://s.web2.qq.com/api/get_discus_list?clientid=53999199&psessionid=#{psessionid}&vfwebqq=#{vfwebqq}&t=#{t}".Replace("#{psessionid}", psessionid).Replace("#{vfwebqq}", vfwebqq).Replace("#{t}", AID_TimeStamp());
             string dat = HttpClient.Get(url, "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2");
@@ -429,7 +428,7 @@ namespace SaberLily
             ReNewListBoxDiscuss();
         }
         //获取讨论组详细信息
-        internal void Info_DisscussInfo(string did)
+        internal static void Info_DisscussInfo(string did)
         {
             string url = "http://d1.web2.qq.com/channel/get_discu_info?did=#{discuss_id}&psessionid=#{psessionid}&vfwebqq=#{vfwebqq}&clientid=53999199&t=#{t}".Replace("#{t}", AID_TimeStamp());
             url = url.Replace("#{discuss_id}", did).Replace("#{psessionid}", psessionid).Replace("#{vfwebqq}", vfwebqq);
@@ -451,7 +450,7 @@ namespace SaberLily
             }
         }
         //更新讨论组列表
-        internal void ReNewListBoxDiscuss()
+        internal static void ReNewListBoxDiscuss()
         {
             listBoxDiscuss.Items.Clear();
             foreach (KeyValuePair<string, DiscussInfo> DiscussList in Date.DiscussList)
@@ -536,7 +535,27 @@ namespace SaberLily
             if (Info_RealQQ(value.send_uin).Equals("1000000"))
                 nick = "系统消息";
             AddAndReNewTextBoxGroupChat(value.from_uin, (Date.GroupList[gid].name + "   " + nick + "  " + Info_RealQQ(value.send_uin) + Environment.NewLine + message), false);
-            AnswerGroupMessage(gid, message, value.send_uin, gno);
+            Saber.AnswerGroupMessage(gid, message, value.send_uin, gno);
+        }
+        //讨论组消息处理
+        private static void Message_Process_DisscussMessage(JsonPollMessage.paramResult.paramValue value)
+        {
+            string message = Message_Process_GetMessageText(value.content);
+            string DName = "讨论组";
+            string SenderNick = "未知";
+            if (!Date.DiscussList.ContainsKey(value.did))
+                Info_DisscussList();
+            if (Date.DiscussList.ContainsKey(value.did))
+            {
+                DName += Date.DiscussList[value.did].name;
+                if (Date.DiscussList[value.did].MemberList.ContainsKey(value.send_uin))
+                    SenderNick = Date.DiscussList[value.did].MemberList[value.send_uin].nick;
+            }
+            else DName = "未知讨论组";
+            if (Info_RealQQ(value.send_uin).Equals("1000000"))
+                SenderNick = "系统消息";
+            AddAndReNewTextBoxDiscussChat(value.from_uin, (DName + "   " + SenderNick + "  " + Info_RealQQ(value.send_uin) + Environment.NewLine + message), false);
+            Saber.AnswerMessage(value.did, message, 2);
         }
         //处理poll包中的消息数组
         private static string Message_Process_GetMessageText(List<object> content)

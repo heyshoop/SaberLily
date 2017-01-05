@@ -15,10 +15,9 @@ namespace SaberLily
         internal static string DicServer = "";
         internal static bool NoDicPassword = false;
         public static string[] Badwords;
-        MainWindow mainWindow = new MainWindow();
 
         //答复
-        private string[] Answer(string message, string uin, string gid = "", string gno = "")
+        private static string[] Answer(string message, string uin, string gid = "", string gno = "")
         {
             string qunnum = gno;
             if (qunnum.Equals(""))
@@ -42,7 +41,7 @@ namespace SaberLily
                 if (!gid.Equals(""))
                 {
                     if (Date.GroupList[gid].GroupManage.enableWeather == null)
-                        mainWindow.GetGroupSetting(gid);
+                        MainWindow.GetGroupSetting(gid);
                     if (Date.GroupList[gid].GroupManage.enableWeather.Equals("false"))
                         DisableFlag = true;
                 }
@@ -74,7 +73,7 @@ namespace SaberLily
                 if (!gid.Equals(""))
                 {
                     if (Date.GroupList[gid].GroupManage.enableTranslate == null)
-                        mainWindow.GetGroupSetting(gid);
+                        MainWindow.GetGroupSetting(gid);
                     if (Date.GroupList[gid].GroupManage.enableTranslate.Equals("false"))
                         DisableFlag = true;
                 }
@@ -97,75 +96,12 @@ namespace SaberLily
                     }
                 }
             }
-            if (message.StartsWith("学习") || message.StartsWith("特权学习"))
-            {
-                bool DisableFlag = false;
-                if (!gid.Equals(""))
-                {
-                    if (SmartQQ.GroupList[gid].GroupManage.enableStudy == null)
-                        GetGroupSetting(gid);
-                    if (SmartQQ.GroupList[gid].GroupManage.enableStudy.Equals("false"))
-                        DisableFlag = true;
-                }
-                if (!DisableFlag)
-                {
-                    bool StudyFlag = true;
-                    bool SuperStudy = false;
-                    string[] tmp = message.Split('^');
-                    if ((!tmp[0].Equals("学习")) || tmp.Length != 3)
-                    {
-                        if ((tmp[0].Equals("特权学习")) && tmp.Length == 3)
-                        {
-                            SuperStudy = true;
-                        }
-                        tmp = message.Split('&');
-                        if ((!tmp[0].Equals("学习")) || tmp.Length != 3)
-                        {
-                            StudyFlag = false;
-                            if ((tmp[0].Equals("特权学习")) && tmp.Length == 3)
-                            {
-                                SuperStudy = true;
-                            }
-                        }
-                    }
-                    if (tmp.Length != 3 || tmp[1].Replace(" ", "").Equals("") || tmp[2].Replace(" ", "").Equals(""))
-                    {
-                        StudyFlag = false;
-                        SuperStudy = false;
-                    }
-                    if (SuperStudy)
-                    {
-                        string result = "";
-                        result = AIStudy(tmp[1], tmp[2], QQNum, gno, true);
-                        MessageToSend[0] = GetStudyFlagInfo(result, QQNum, tmp[1], tmp[2]);
-                        return MessageToSend;
-                    }
-                    if (StudyFlag)
-                    {
-                        string result = "";
-                        for (int i = 0; i < Badwords.Length; i++)
-                            if (tmp[1].Contains(Badwords[i]) || tmp[2].Contains(Badwords[i]))
-                            {
-                                result = "ForbiddenWord";
-                                break;
-                            }
-                        if (result.Equals(""))
-                            result = AIStudy(tmp[1], tmp[2], QQNum, gno, false);
-                        MessageToSend[0] = GetStudyFlagInfo(result, QQNum, tmp[1], tmp[2]);
-
-                        string url = DicServer + "log.php";
-                        string postdata = "password=" + HttpUtility.UrlEncode(DicPassword) + "&qqnum=" + HttpUtility.UrlEncode(QQNum) + "&qunnum=" + HttpUtility.UrlEncode(qunnum) + "&action=study&p1=" + HttpUtility.UrlEncode(tmp[1]) + "&p2=" + HttpUtility.UrlEncode(tmp[2]) + "&p3=NULL&p4=NULL";
-                        HTTP.Post(url, postdata);
-                        return MessageToSend;
-                    }
-                }
-            }
             bool DisableTalkFlag = false;
             if (!gid.Equals(""))
             {
-                if (SmartQQ.GroupList[gid].GroupManage.enableTalk == null)
-                    GetGroupSetting(gid);
-                if (SmartQQ.GroupList[gid].GroupManage.enableTalk.Equals("false"))
+                if (Date.GroupList[gid].GroupManage.enableTalk == null)
+                    MainWindow.GetGroupSetting(gid);
+                if (Date.GroupList[gid].GroupManage.enableTalk.Equals("false"))
                     DisableTalkFlag = true;
             }
             if (!DisableTalkFlag)
@@ -176,7 +112,7 @@ namespace SaberLily
                 {
                     string url = DicServer + "log.php";
                     string postdata = "password=" + HttpUtility.UrlEncode(DicPassword) + "&qqnum=" + HttpUtility.UrlEncode(QQNum) + "&qunnum=" + HttpUtility.UrlEncode(qunnum) + "&action=talk&p1=" + HttpUtility.UrlEncode(message) + "&p2=NULL&p3=NULL&p4=NULL";
-                    HTTP.Post(url, postdata);
+                    HttpClient.Post(url, postdata);
                     return MessageToSend;
                 }
                 string[] tmp1 = message.Split("@#$(),，.。:：;^&；“”～~！!#（）%？?》《、· \r\n\"".ToCharArray());
@@ -236,9 +172,9 @@ namespace SaberLily
                     bool DisableFlag = false;
                     if (!gid.Equals(""))
                     {
-                        if (SmartQQ.GroupList[gid].GroupManage.enableXHJ == null)
-                            GetGroupSetting(gid);
-                        if (SmartQQ.GroupList[gid].GroupManage.enableXHJ.Equals("false"))
+                        if (Date.GroupList[gid].GroupManage.enableXHJ == null)
+                            MainWindow.GetGroupSetting(gid);
+                        if (Date.GroupList[gid].GroupManage.enableXHJ.Equals("false"))
                             DisableFlag = true;
                     }
                     if (!DisableFlag)
@@ -259,7 +195,7 @@ namespace SaberLily
                 {
                     string url = DicServer + "log.php";
                     string postdata = "password=" + HttpUtility.UrlEncode(DicPassword) + "&qqnum=" + HttpUtility.UrlEncode(QQNum) + "&qunnum=" + HttpUtility.UrlEncode(qunnum) + "&action=talk&p1=" + HttpUtility.UrlEncode(message) + "&p2=NULL&p3=NULL&p4=NULL";
-                    HTTP.Post(url, postdata);
+                    HttpClient.Post(url, postdata);
                 }
                 return MessageToSend;
             }
@@ -273,12 +209,12 @@ namespace SaberLily
             string MessageToSend = "";
             if (message.StartsWith("群管理"))
             {
-                SmartQQ.Info_GroupInfo(gid);
+                MainWindow.Info_GroupInfo(gid);
                 if (!gid.Equals(""))
                 {
                     adminuin = "";
-                    if (SmartQQ.GroupList.ContainsKey(gid))
-                        adminuin = SmartQQ.GroupList[gid].owner;
+                    if (Date.GroupList.ContainsKey(gid))
+                        adminuin = Date.GroupList[gid].owner;
                 }
 
                 bool GroupManageFlag = true;
@@ -291,35 +227,35 @@ namespace SaberLily
                 if (GroupManageFlag)
                 {
                     bool HaveRight = false;
-                    if (uin.Equals(adminuin) || SmartQQ.Info_RealQQ(uin).Equals(MasterQQ))
+                    if (uin.Equals(adminuin) || MainWindow.Info_RealQQ(uin).Equals(MasterQQ))
                         HaveRight = true;
-                    else if (SmartQQ.GroupList[gid].MemberList[uin].isManager)
+                    else if (Date.GroupList[gid].MemberList[uin].isManager)
                         HaveRight = true;
                     else HaveRight = false;
-                    if (SmartQQ.GroupList[gid].GroupManage.enable == null)
+                    if (Date.GroupList[gid].GroupManage.enable == null)
                     {
-                        GetGroupSetting(gid);
+                        MainWindow.GetGroupSetting(gid);
                     }
                     if (tmp.Length != 2 || tmp[1] == null)
                         return "";
-                    if ((HaveRight || SmartQQ.GroupList[gid].GroupManage.enable.Equals("true")) && (tmp[1].Equals("查询状态") || tmp[1].Equals("状态")))
+                    if ((HaveRight || Date.GroupList[gid].GroupManage.enable.Equals("true")) && (tmp[1].Equals("查询状态") || tmp[1].Equals("状态")))
                     {
-                        MessageToSend = "机器人启动：" + SmartQQ.GroupList[gid].GroupManage.enable + Environment.NewLine;
-                        MessageToSend += "汇率查询启动：" + SmartQQ.GroupList[gid].GroupManage.enableExchangeRate + Environment.NewLine;
-                        MessageToSend += "百科查询启动：" + SmartQQ.GroupList[gid].GroupManage.enableWiki + Environment.NewLine;
-                        MessageToSend += "天气查询启动：" + SmartQQ.GroupList[gid].GroupManage.enableWeather + Environment.NewLine;
-                        MessageToSend += "城市信息查询启动：" + SmartQQ.GroupList[gid].GroupManage.enableCityInfo + Environment.NewLine;
-                        MessageToSend += "学习启动：" + SmartQQ.GroupList[gid].GroupManage.enableStudy + Environment.NewLine;
-                        MessageToSend += "行情查询启动：" + SmartQQ.GroupList[gid].GroupManage.enableStock + Environment.NewLine;
-                        MessageToSend += "翻译启动：" + SmartQQ.GroupList[gid].GroupManage.enableTranslate + Environment.NewLine;
-                        MessageToSend += "闲聊启动：" + SmartQQ.GroupList[gid].GroupManage.enableTalk + Environment.NewLine;
-                        MessageToSend += "表情启动：" + SmartQQ.GroupList[gid].GroupManage.enableEmoje + Environment.NewLine;
-                        MessageToSend += "小黄鸡启动：" + SmartQQ.GroupList[gid].GroupManage.enableXHJ;
+                        MessageToSend = "机器人启动：" + Date.GroupList[gid].GroupManage.enable + Environment.NewLine;
+                        MessageToSend += "汇率查询启动：" + Date.GroupList[gid].GroupManage.enableExchangeRate + Environment.NewLine;
+                        MessageToSend += "百科查询启动：" + Date.GroupList[gid].GroupManage.enableWiki + Environment.NewLine;
+                        MessageToSend += "天气查询启动：" + Date.GroupList[gid].GroupManage.enableWeather + Environment.NewLine;
+                        MessageToSend += "城市信息查询启动：" + Date.GroupList[gid].GroupManage.enableCityInfo + Environment.NewLine;
+                        MessageToSend += "学习启动：" + Date.GroupList[gid].GroupManage.enableStudy + Environment.NewLine;
+                        MessageToSend += "行情查询启动：" + Date.GroupList[gid].GroupManage.enableStock + Environment.NewLine;
+                        MessageToSend += "翻译启动：" + Date.GroupList[gid].GroupManage.enableTranslate + Environment.NewLine;
+                        MessageToSend += "闲聊启动：" + Date.GroupList[gid].GroupManage.enableTalk + Environment.NewLine;
+                        MessageToSend += "表情启动：" + Date.GroupList[gid].GroupManage.enableEmoje + Environment.NewLine;
+                        MessageToSend += "小黄鸡启动：" + Date.GroupList[gid].GroupManage.enableXHJ;
                         return MessageToSend;
                     }
                     if (HaveRight == false)
                     {
-                        MessageToSend = "账号" + SmartQQ.Info_RealQQ(uin) + "不是群管理，无权进行此操作";
+                        MessageToSend = "账号" + MainWindow.Info_RealQQ(uin) + "不是群管理，无权进行此操作";
                         return MessageToSend;
                     }
                     else
@@ -328,7 +264,7 @@ namespace SaberLily
                         tmp[1] = tmp[1].Replace("开起", "启动");
                         if (tmp[1].Equals("启动机器人"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enable.Equals("true"))
+                            if (Date.GroupList[gid].GroupManage.enable.Equals("true"))
                             {
                                 MessageToSend = "当前机器人已启动";
                                 return MessageToSend;
@@ -343,7 +279,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("关闭机器人"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enable.Equals("false"))
+                            if (Date.GroupList[gid].GroupManage.enable.Equals("false"))
                             {
                                 MessageToSend = "当前机器人已关闭";
                                 return MessageToSend;
@@ -358,7 +294,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("启动城市信息查询"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableCityInfo.Equals("true"))
+                            if (Date.GroupList[gid].GroupManage.enableCityInfo.Equals("true"))
                             {
                                 MessageToSend = "当前城市信息查询已启动";
                                 return MessageToSend;
@@ -373,7 +309,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("关闭城市信息查询"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableCityInfo.Equals("false"))
+                            if (Date.GroupList[gid].GroupManage.enableCityInfo.Equals("false"))
                             {
                                 MessageToSend = "当前城市信息查询已关闭";
                                 return MessageToSend;
@@ -388,7 +324,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("启动天气查询"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableWeather.Equals("true"))
+                            if (Date.GroupList[gid].GroupManage.enableWeather.Equals("true"))
                             {
                                 MessageToSend = "当前天气查询已启动";
                                 return MessageToSend;
@@ -403,7 +339,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("关闭天气查询"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableWeather.Equals("false"))
+                            if (Date.GroupList[gid].GroupManage.enableWeather.Equals("false"))
                             {
                                 MessageToSend = "当前天气查询已关闭";
                                 return MessageToSend;
@@ -418,7 +354,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("启动百科查询"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableWiki.Equals("true"))
+                            if (Date.GroupList[gid].GroupManage.enableWiki.Equals("true"))
                             {
                                 MessageToSend = "当前百科查询已启动";
                                 return MessageToSend;
@@ -433,7 +369,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("关闭百科查询"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableWiki.Equals("false"))
+                            if (Date.GroupList[gid].GroupManage.enableWiki.Equals("false"))
                             {
                                 MessageToSend = "当前百科查询已关闭";
                                 return MessageToSend;
@@ -446,69 +382,9 @@ namespace SaberLily
                                 return MessageToSend;
                             }
                         }
-                        else if (tmp[1].Equals("启动汇率查询"))
-                        {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableExchangeRate.Equals("true"))
-                            {
-                                MessageToSend = "当前汇率查询已启动";
-                                return MessageToSend;
-                            }
-                            else
-                            {
-                                SetGroupSetting(gid, "enableExchangeRate", "true");
-
-                                MessageToSend = "汇率查询启动成功";
-                                return MessageToSend;
-                            }
-                        }
-                        else if (tmp[1].Equals("关闭汇率查询"))
-                        {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableExchangeRate.Equals("false"))
-                            {
-                                MessageToSend = "当前汇率查询已关闭";
-                                return MessageToSend;
-                            }
-                            else
-                            {
-                                SetGroupSetting(gid, "enableExchangeRate", "false");
-
-                                MessageToSend = "汇率查询关闭成功";
-                                return MessageToSend;
-                            }
-                        }
-                        else if (tmp[1].Equals("启动行情查询"))
-                        {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableStock.Equals("true"))
-                            {
-                                MessageToSend = "当前行情查询已启动";
-                                return MessageToSend;
-                            }
-                            else
-                            {
-                                SetGroupSetting(gid, "enableStock", "true");
-
-                                MessageToSend = "行情查询启动成功";
-                                return MessageToSend;
-                            }
-                        }
-                        else if (tmp[1].Equals("关闭行情查询"))
-                        {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableStock.Equals("false"))
-                            {
-                                MessageToSend = "当前行情查询已关闭";
-                                return MessageToSend;
-                            }
-                            else
-                            {
-                                SetGroupSetting(gid, "enableStock", "false");
-
-                                MessageToSend = "行情查询关闭成功";
-                                return MessageToSend;
-                            }
-                        }
                         else if (tmp[1].Equals("启动聊天") || tmp[1].Equals("启动闲聊"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableTalk.Equals("true"))
+                            if (Date.GroupList[gid].GroupManage.enableTalk.Equals("true"))
                             {
                                 MessageToSend = "当前聊天已启动";
                                 return MessageToSend;
@@ -523,7 +399,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("关闭聊天") || tmp[1].Equals("关闭闲聊"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableTalk.Equals("false"))
+                            if (Date.GroupList[gid].GroupManage.enableTalk.Equals("false"))
                             {
                                 MessageToSend = "当前聊天已关闭";
                                 return MessageToSend;
@@ -536,39 +412,9 @@ namespace SaberLily
                                 return MessageToSend;
                             }
                         }
-                        else if (tmp[1].Equals("启动学习"))
-                        {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableStudy.Equals("true"))
-                            {
-                                MessageToSend = "当前学习已启动";
-                                return MessageToSend;
-                            }
-                            else
-                            {
-                                SetGroupSetting(gid, "enableStudy", "true");
-
-                                MessageToSend = "学习启动成功";
-                                return MessageToSend;
-                            }
-                        }
-                        else if (tmp[1].Equals("关闭学习"))
-                        {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableStudy.Equals("false"))
-                            {
-                                MessageToSend = "当前学习已关闭";
-                                return MessageToSend;
-                            }
-                            else
-                            {
-                                SetGroupSetting(gid, "enableStudy", "false");
-
-                                MessageToSend = "学习关闭成功";
-                                return MessageToSend;
-                            }
-                        }
                         else if (tmp[1].Equals("启动小黄鸡"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableXHJ.Equals("true"))
+                            if (Date.GroupList[gid].GroupManage.enableXHJ.Equals("true"))
                             {
                                 MessageToSend = "当前小黄鸡已启动";
                                 return MessageToSend;
@@ -583,7 +429,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("关闭小黄鸡"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableXHJ.Equals("false"))
+                            if (Date.GroupList[gid].GroupManage.enableXHJ.Equals("false"))
                             {
                                 MessageToSend = "当前小黄鸡已关闭";
                                 return MessageToSend;
@@ -598,7 +444,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("启动表情"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableEmoje.Equals("true"))
+                            if (Date.GroupList[gid].GroupManage.enableEmoje.Equals("true"))
                             {
                                 MessageToSend = "当前表情已启动";
                                 return MessageToSend;
@@ -613,7 +459,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("关闭表情"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableEmoje.Equals("false"))
+                            if (Date.GroupList[gid].GroupManage.enableEmoje.Equals("false"))
                             {
                                 MessageToSend = "当前表情已关闭";
                                 return MessageToSend;
@@ -628,7 +474,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("启动翻译"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableTranslate.Equals("true"))
+                            if (Date.GroupList[gid].GroupManage.enableTranslate.Equals("true"))
                             {
                                 MessageToSend = "当前翻译已启动";
                                 return MessageToSend;
@@ -643,7 +489,7 @@ namespace SaberLily
                         }
                         else if (tmp[1].Equals("关闭翻译"))
                         {
-                            if (SmartQQ.GroupList[gid].GroupManage.enableTranslate.Equals("false"))
+                            if (Date.GroupList[gid].GroupManage.enableTranslate.Equals("false"))
                             {
                                 MessageToSend = "当前翻译已关闭";
                                 return MessageToSend;
@@ -702,22 +548,84 @@ namespace SaberLily
                 MainWindow.Message_Send(0, uin, SenderName + Gender + "什么意思？请告诉我怎么做" + Environment.NewLine + "格式 学习&问题&Saber的回复");
             }
         }
-        //向服务器提交AI学习请求
-        public static string AIStudy(string source, string aim, string QQNum, string QunNum = "", bool superstudy = false)
+        //收到群消息时调用的回复函数
+        internal static void AnswerGroupMessage(string gid, string message, string uin, string gno)
         {
-            MainWindow.listBoxLog.Items.Insert(0, "学习 " + source + " " + aim);
-            string url;
-            if (NoDicPassword)
-                url = DicServer + "AddTalkRequest.php";
-            else
-                url = DicServer + "addtalk.php";
-            string postdata = "password=" + HttpUtility.UrlEncode(DicPassword) + "&source=" + HttpUtility.UrlEncode(source) + "&aim=" + HttpUtility.UrlEncode(aim) + "&qqnum=" + HttpUtility.UrlEncode(QQNum) + "&qunnum=" + HttpUtility.UrlEncode(QunNum);
-            if (superstudy)
-                postdata = postdata + "&superstudy=true";
-            else postdata = postdata + "&superstudy=false";
+            string MessageToSend = GroupManage(message, uin, gid, gno);
 
-            string MsgGet = HttpClient.Post(url, postdata);
-            return MsgGet;
+            if (!MessageToSend.Equals(""))
+            {
+                MainWindow.Message_Send(1, gid, MessageToSend);
+                return;
+            }
+            if (!Date.GroupList.ContainsKey(gid))
+                MainWindow.Info_GroupList();
+            if (Date.GroupList.ContainsKey(gid))
+            {
+                if (Date.GroupList[gid].GroupManage == null)
+                    MainWindow.GetGroupSetting(gid);
+                if (Date.GroupList[gid].GroupManage.enable == null || Date.GroupList[gid].GroupManage.enable.Equals("false"))
+                    return;
+            }
+
+            string[] MessageToSendArray = Answer(message, uin, gid, gno);
+            for (int i = 0; i < 10; i++)
+            {
+                if (MessageToSendArray[i] != null && !MessageToSendArray[i].Equals("") && !MessageToSendArray[i].Equals("None3"))
+                {
+                    if (!MessageToSend.Equals(""))
+                        MessageToSend += Environment.NewLine;
+                    MessageToSend += MessageToSendArray[i];
+                    MessageToSendArray[i] = "";
+                }
+            }
+            if (Date.GroupList[gid].GroupManage.enableEmoje.Equals("false"))
+            {
+                string[] tmp = MessageToSend.Split('{');
+                MessageToSend = "";
+                for (int i = 0; i < tmp.Length; i++)
+                    if (!tmp[i].StartsWith("..[face"))
+                        MessageToSend += ("{" + tmp[i]);
+                    else MessageToSend += tmp[i].Remove(0, 7);
+            }
+            MainWindow.Message_Send(1, gid, MessageToSend);
+        }
+        //从服务器获取AI回复
+        private static string AIGet(string message, string QQNum, string QunNum = "NULL")
+        {
+            string url = DicServer + "gettalk.php?source=" + message + "&qqnum=" + QQNum + "&qunnum=" + QunNum;
+            string temp = HttpClient.Get(url);
+            if (temp.Equals("None1") || temp.Equals("None2") || temp.Equals("None4"))
+                temp = "";
+            return temp;
+        }
+        //设置服务器上存储的群配置信息
+        private static void SetGroupSetting(string gid, string option, string value)
+        {
+            if (!NoDicPassword)
+            {
+                string url = DicServer + "groupmanage.php?password=" + DicPassword + "&action=set&gno=" + MainWindow.AID_GroupKey(gid) + "&option=" + option + "&value=" + value;
+                string temp = HttpClient.Get(url);
+                JsonGroupManageModel GroupManageInfo = (JsonGroupManageModel)JsonConvert.DeserializeObject(temp, typeof(JsonGroupManageModel));
+                if (GroupManageInfo.statu.Equals("fail"))
+                    MainWindow.listBoxLog.Items.Insert(0, GroupManageInfo.statu + GroupManageInfo.error);
+            }
+            if (option.Equals("enable"))
+                Date.GroupList[gid].GroupManage.enable = value;
+            else if (option.Equals("enablexhj"))
+                Date.GroupList[gid].GroupManage.enableXHJ = value;
+            else if (option.Equals("enableWeather"))
+                Date.GroupList[gid].GroupManage.enableWeather = value;
+            else if (option.Equals("enabletalk"))
+                Date.GroupList[gid].GroupManage.enableTalk = value;
+            else if (option.Equals("enableStock"))
+                Date.GroupList[gid].GroupManage.enableStock = value;
+            else if (option.Equals("enableExchangeRate"))
+                Date.GroupList[gid].GroupManage.enableExchangeRate = value;
+            else if (option.Equals("enableEmoje"))
+                Date.GroupList[gid].GroupManage.enableEmoje = value;
+            else if (option.Equals("enableTranslate"))
+                Date.GroupList[gid].GroupManage.enableTranslate = value;
         }
     }
 }
