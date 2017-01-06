@@ -88,6 +88,11 @@ namespace SaberLily
             return dat;
         }
         public delegate void Post_Async_Action(string data);
+        private class Post_Async_Data
+        {
+            public HttpWebRequest req;
+            public Post_Async_Action post_Async_Action;
+        }
         public static void Post_Async(string url, string PostData, Post_Async_Action action, string Referer = "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2", int timeout = 100000)
         {
             HttpWebRequest req = WebRequest.Create(url) as HttpWebRequest;
@@ -110,6 +115,18 @@ namespace SaberLily
             dat.req = req;
             dat.post_Async_Action = action;
             req.BeginGetResponse(new AsyncCallback(Post_Async_ResponesProceed), dat);
+        }
+        private static void Post_Async_ResponesProceed(IAsyncResult ar)
+        {
+            StreamReader reader = null;
+            Post_Async_Data dat = ar.AsyncState as Post_Async_Data;
+            HttpWebRequest req = dat.req;
+            HttpWebResponse res = req.GetResponse() as HttpWebResponse;
+            reader = new StreamReader(res.GetResponseStream());
+            string temp = reader.ReadToEnd();
+            res.Close();
+            req.Abort();
+            dat.post_Async_Action(temp);
         }
     }
 }

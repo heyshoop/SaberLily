@@ -15,9 +15,10 @@ namespace SaberLily
         internal static string DicServer = "";
         internal static bool NoDicPassword = false;
         public static string[] Badwords;
+        MainWindow mainWindow = new MainWindow();
 
         //答复
-        private static string[] Answer(string message, string uin, string gid = "", string gno = "")
+        private string[] Answer(string message, string uin, string gid = "", string gno = "")
         {
             string qunnum = gno;
             if (qunnum.Equals(""))
@@ -41,7 +42,7 @@ namespace SaberLily
                 if (!gid.Equals(""))
                 {
                     if (Date.GroupList[gid].GroupManage.enableWeather == null)
-                        MainWindow.GetGroupSetting(gid);
+                        mainWindow.GetGroupSetting(gid);
                     if (Date.GroupList[gid].GroupManage.enableWeather.Equals("false"))
                         DisableFlag = true;
                 }
@@ -73,7 +74,7 @@ namespace SaberLily
                 if (!gid.Equals(""))
                 {
                     if (Date.GroupList[gid].GroupManage.enableTranslate == null)
-                        MainWindow.GetGroupSetting(gid);
+                        mainWindow.GetGroupSetting(gid);
                     if (Date.GroupList[gid].GroupManage.enableTranslate.Equals("false"))
                         DisableFlag = true;
                 }
@@ -100,7 +101,7 @@ namespace SaberLily
             if (!gid.Equals(""))
             {
                 if (Date.GroupList[gid].GroupManage.enableTalk == null)
-                    MainWindow.GetGroupSetting(gid);
+                    mainWindow.GetGroupSetting(gid);
                 if (Date.GroupList[gid].GroupManage.enableTalk.Equals("false"))
                     DisableTalkFlag = true;
             }
@@ -173,7 +174,7 @@ namespace SaberLily
                     if (!gid.Equals(""))
                     {
                         if (Date.GroupList[gid].GroupManage.enableXHJ == null)
-                            MainWindow.GetGroupSetting(gid);
+                            mainWindow.GetGroupSetting(gid);
                         if (Date.GroupList[gid].GroupManage.enableXHJ.Equals("false"))
                             DisableFlag = true;
                     }
@@ -203,7 +204,7 @@ namespace SaberLily
         }
 
 
-        private static string GroupManage(string message, string uin, string gid, string gno)
+        private string GroupManage(string message, string uin, string gid, string gno)
         {
             string adminuin = "";
             string MessageToSend = "";
@@ -234,7 +235,7 @@ namespace SaberLily
                     else HaveRight = false;
                     if (Date.GroupList[gid].GroupManage.enable == null)
                     {
-                        MainWindow.GetGroupSetting(gid);
+                        mainWindow.GetGroupSetting(gid);
                     }
                     if (tmp.Length != 2 || tmp[1] == null)
                         return "";
@@ -514,7 +515,7 @@ namespace SaberLily
         }
 
         //收到私聊和讨论组消息时调用的回复函数
-        public static void AnswerMessage(string uin, string message, int type = 0)
+        public void AnswerMessage(string uin, string message, int type = 0)
         {
             string[] MessageToSendArray = Answer(message, uin);
             string MessageToSend = "";
@@ -529,13 +530,13 @@ namespace SaberLily
                 }
             }
             if (!MessageToSend.Equals(""))
-                MainWindow.Message_Send(type, uin, MessageToSend);
+                mainWindow.Message_Send(type, uin, MessageToSend);
             else if (type == 0)
             {
                 string SenderName = "";
                 string Gender = "";
                 if (!Date.FriendList.ContainsKey(uin))
-                    MainWindow.Info_FriendList();
+                    mainWindow.Info_FriendList();
                 if (Date.FriendList.ContainsKey(uin))
                 {
                     SenderName = Date.FriendList[uin].nick;
@@ -545,25 +546,25 @@ namespace SaberLily
                     Gender = "切嗣 ";
                 else if (Gender == "male")
                     Gender = "士郎 ";
-                MainWindow.Message_Send(0, uin, SenderName + Gender + "什么意思？请告诉我怎么做" + Environment.NewLine + "格式 学习&问题&Saber的回复");
+                mainWindow.Message_Send(0, uin, SenderName + Gender + "什么意思？请告诉我怎么做" + Environment.NewLine + "格式 学习&问题&Saber的回复");
             }
         }
         //收到群消息时调用的回复函数
-        internal static void AnswerGroupMessage(string gid, string message, string uin, string gno)
+        internal void AnswerGroupMessage(string gid, string message, string uin, string gno)
         {
             string MessageToSend = GroupManage(message, uin, gid, gno);
 
             if (!MessageToSend.Equals(""))
             {
-                MainWindow.Message_Send(1, gid, MessageToSend);
+                mainWindow.Message_Send(1, gid, MessageToSend);
                 return;
             }
             if (!Date.GroupList.ContainsKey(gid))
-                MainWindow.Info_GroupList();
+                mainWindow.Info_GroupList();
             if (Date.GroupList.ContainsKey(gid))
             {
                 if (Date.GroupList[gid].GroupManage == null)
-                    MainWindow.GetGroupSetting(gid);
+                    mainWindow.GetGroupSetting(gid);
                 if (Date.GroupList[gid].GroupManage.enable == null || Date.GroupList[gid].GroupManage.enable.Equals("false"))
                     return;
             }
@@ -588,7 +589,7 @@ namespace SaberLily
                         MessageToSend += ("{" + tmp[i]);
                     else MessageToSend += tmp[i].Remove(0, 7);
             }
-            MainWindow.Message_Send(1, gid, MessageToSend);
+            mainWindow.Message_Send(1, gid, MessageToSend);
         }
         //从服务器获取AI回复
         private static string AIGet(string message, string QQNum, string QunNum = "NULL")
@@ -600,15 +601,15 @@ namespace SaberLily
             return temp;
         }
         //设置服务器上存储的群配置信息
-        private static void SetGroupSetting(string gid, string option, string value)
+        private void SetGroupSetting(string gid, string option, string value)
         {
             if (!NoDicPassword)
             {
-                string url = DicServer + "groupmanage.php?password=" + DicPassword + "&action=set&gno=" + MainWindow.AID_GroupKey(gid) + "&option=" + option + "&value=" + value;
+                string url = DicServer + "groupmanage.php?password=" + DicPassword + "&action=set&gno=" + mainWindow.AID_GroupKey(gid) + "&option=" + option + "&value=" + value;
                 string temp = HttpClient.Get(url);
                 JsonGroupManageModel GroupManageInfo = (JsonGroupManageModel)JsonConvert.DeserializeObject(temp, typeof(JsonGroupManageModel));
                 if (GroupManageInfo.statu.Equals("fail"))
-                    MainWindow.listBoxLog.Items.Insert(0, GroupManageInfo.statu + GroupManageInfo.error);
+                    mainWindow.listBoxLog.Items.Insert(0, GroupManageInfo.statu + GroupManageInfo.error);
             }
             if (option.Equals("enable"))
                 Date.GroupList[gid].GroupManage.enable = value;

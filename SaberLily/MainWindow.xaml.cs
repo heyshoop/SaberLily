@@ -25,6 +25,7 @@ namespace SaberLily
         private static string vfwebqq, ptwebqq, psessionid, uin, hash;
         private static bool Running = true;
         private static int Count103 = 0;
+        Saber saber = new Saber();
 
         public MainWindow()
         {
@@ -214,7 +215,7 @@ namespace SaberLily
             else return "ERROR";
         }
         //获取好友列表
-        internal static void Info_FriendList()
+        internal void Info_FriendList()
         {
             string url = "http://s.web2.qq.com/api/get_user_friends2";
             string sendData = string.Format("r={{\"vfwebqq\":\"{0}\",\"hash\":\"{1}\"}}", vfwebqq, hash);
@@ -269,7 +270,7 @@ namespace SaberLily
                 Date.FriendList[uin].birthday = new DateTime(inf.result.birthday.year, inf.result.birthday.month, inf.result.birthday.day);
         }
         //更新主界面好友列表
-        internal static void ReNewListBoxFriend()
+        internal void ReNewListBoxFriend()
         {
             listBoxFriend.Items.Clear();
             foreach (KeyValuePair<string, FriendInfo> FriendList in Date.FriendList)
@@ -294,7 +295,7 @@ namespace SaberLily
             else return "";
         }
         //获取群列表并保存
-        internal static void Info_GroupList()
+        internal void Info_GroupList()
         {
             string url = "http://s.web2.qq.com/api/get_group_name_list_mask2";
             string sendData = string.Format("r={{\"vfwebqq\":\"{0}\",\"hash\":\"{1}\"}}", vfwebqq, hash);
@@ -351,7 +352,7 @@ namespace SaberLily
                 else Date.GroupList[gid].MemberList[groupInfo.result.ginfo.members[i].muin].isManager = false;
         }
         //获取指定群的信息
-        internal static void GetGroupSetting(string gid)
+        internal void GetGroupSetting(string gid)
         {
             string url = Date.DicServer + "groupmanage.php?password=" + Date.DicPassword + "&action=get&gno=" + AID_GroupKey(gid);
             string temp = HttpClient.Get(url);
@@ -395,7 +396,7 @@ namespace SaberLily
             }
         }
         //生成由群主QQ和群创建时间构成的群标识码
-        internal static string AID_GroupKey(string gid)
+        internal string AID_GroupKey(string gid)
         {
             if (!Date.GroupList.ContainsKey(gid))
                 Info_GroupList();
@@ -404,7 +405,7 @@ namespace SaberLily
             else return "FAIL";
         }
         //更新主界面的QQ群列表
-        internal static void ReNewListBoxGroup()
+        internal void ReNewListBoxGroup()
         {
             listBoxGroup.Items.Clear();
             foreach (KeyValuePair<string, GroupInfo> GroupList in Date.GroupList)
@@ -413,7 +414,7 @@ namespace SaberLily
             }
         }
         //获取讨论组并保存
-        internal static void Info_DisscussList()
+        internal void Info_DisscussList()
         {
             string url = "http://s.web2.qq.com/api/get_discus_list?clientid=53999199&psessionid=#{psessionid}&vfwebqq=#{vfwebqq}&t=#{t}".Replace("#{psessionid}", psessionid).Replace("#{vfwebqq}", vfwebqq).Replace("#{t}", AID_TimeStamp());
             string dat = HttpClient.Get(url, "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2");
@@ -450,7 +451,7 @@ namespace SaberLily
             }
         }
         //更新讨论组列表
-        internal static void ReNewListBoxDiscuss()
+        internal void ReNewListBoxDiscuss()
         {
             listBoxDiscuss.Items.Clear();
             foreach (KeyValuePair<string, DiscussInfo> DiscussList in Date.DiscussList)
@@ -519,7 +520,7 @@ namespace SaberLily
             if (Date.FriendList.ContainsKey(value.from_uin))
                 nick = Date.FriendList[value.from_uin].nick;
             AddAndReNewTextBoxFriendChat(value.from_uin, (nick + "  " + Info_RealQQ(value.from_uin) + Environment.NewLine + message), false);
-            Saber.AnswerMessage(value.from_uin, message, 0);
+            saber.AnswerMessage(value.from_uin, message, 0);
         }
         //群聊消息处理
         private void Message_Process_GroupMessage(JsonPollMessage.paramResult.paramValue value)
@@ -535,10 +536,10 @@ namespace SaberLily
             if (Info_RealQQ(value.send_uin).Equals("1000000"))
                 nick = "系统消息";
             AddAndReNewTextBoxGroupChat(value.from_uin, (Date.GroupList[gid].name + "   " + nick + "  " + Info_RealQQ(value.send_uin) + Environment.NewLine + message), false);
-            Saber.AnswerGroupMessage(gid, message, value.send_uin, gno);
+            saber.AnswerGroupMessage(gid, message, value.send_uin, gno);
         }
         //讨论组消息处理
-        private static void Message_Process_DisscussMessage(JsonPollMessage.paramResult.paramValue value)
+        private void Message_Process_DisscussMessage(JsonPollMessage.paramResult.paramValue value)
         {
             string message = Message_Process_GetMessageText(value.content);
             string DName = "讨论组";
@@ -555,7 +556,7 @@ namespace SaberLily
             if (Info_RealQQ(value.send_uin).Equals("1000000"))
                 SenderNick = "系统消息";
             AddAndReNewTextBoxDiscussChat(value.from_uin, (DName + "   " + SenderNick + "  " + Info_RealQQ(value.send_uin) + Environment.NewLine + message), false);
-            Saber.AnswerMessage(value.did, message, 2);
+            saber.AnswerMessage(value.did, message, 2);
         }
         //处理poll包中的消息数组
         private static string Message_Process_GetMessageText(List<object> content)
@@ -574,26 +575,26 @@ namespace SaberLily
             return message;
         }
 
-        internal static void AddAndReNewTextBoxFriendChat(string uin, string str = "", bool ChangeCurrentUin = false)
+        internal void AddAndReNewTextBoxFriendChat(string uin, string str = "", bool ChangeCurrentUin = false)
         {
             Date.FriendList[uin].Messages += str + Environment.NewLine;
             if (ChangeCurrentUin || (listBoxFriend.SelectedItem != null && uin.Equals(listBoxFriend.SelectedItem.ToString().Split(':')[0])))
                 textBoxFriendChat.Text = Date.FriendList[uin].Messages;
         }
-        internal static void AddAndReNewTextBoxGroupChat(string gid, string str = "", bool ChangeCurrentGid = false)
+        internal void AddAndReNewTextBoxGroupChat(string gid, string str = "", bool ChangeCurrentGid = false)
         {
             Date.GroupList[gid].Messages += str + Environment.NewLine;
             if (ChangeCurrentGid || (listBoxGroup.SelectedItem != null && gid.Equals(listBoxGroup.SelectedItem.ToString().Split(':')[0])))
                 textBoxGroupChat.Text = Date.GroupList[gid].Messages;
         }
-        internal static void AddAndReNewTextBoxDiscussChat(string did, string str = "", bool ChangeCurrentDid = false)
+        internal void AddAndReNewTextBoxDiscussChat(string did, string str = "", bool ChangeCurrentDid = false)
         {
             Date.DiscussList[did].Messages += str + Environment.NewLine;
             if (ChangeCurrentDid || (listBoxDiscuss.SelectedItem != null && did.Equals(listBoxDiscuss.SelectedItem.ToString().Split(':')[0])))
                 textBoxDiscussChat.Text = Date.DiscussList[did].Messages;
         }
         //发送消息
-        public static bool Message_Send(int type, string id, string messageToSend, bool auto = true)
+        public bool Message_Send(int type, string id, string messageToSend, bool auto = true)
         {
             if (auto)
             {
