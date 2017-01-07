@@ -34,8 +34,8 @@ namespace SaberLily
                 MsgGet = dat.list[0].name + "：" + dat.list[0].info;
             }
             else return "";
-            for (int i = 0; i < Saber.Badwords.Length; i++)
-                if (MsgGet.Contains(Saber.Badwords[i]))
+            for (int i = 0; i < MainWindow.Badwords.Length; i++)
+                if (MsgGet.Contains(MainWindow.Badwords[i]))
                     return "";
             return MsgGet;
         }
@@ -69,10 +69,10 @@ namespace SaberLily
             else if (dat.errorcode == 50)
                 messagetosend = messagetosend + Environment.NewLine + "有道翻译：有道API密钥错误";
 
-            for (int i = 0; i < Saber.Badwords.Length; i++)
-                if (messagetosend.Contains(Saber.Badwords[i]))
+            for (int i = 0; i < MainWindow.Badwords.Length; i++)
+                if (messagetosend.Contains(MainWindow.Badwords[i]))
                 {
-                    messagetosend = messagetosend.Replace(Saber.Badwords[i], "***");
+                    messagetosend = messagetosend.Replace(MainWindow.Badwords[i], "***");
                 }
             return messagetosend;
         }
@@ -340,8 +340,8 @@ namespace SaberLily
             {
                 string url = "https://zh.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exsentences=2&exintro=&explaintext=&exsectionformat=plain&exvariant=zh&titles=" + keyword;
                 string temp = HttpClient.Get(url);
-                for (int i = 0; i < Saber.Badwords.Length; i++)
-                    if (temp.Contains(Saber.Badwords[i]) || keyword.Contains(Saber.Badwords[i]))
+                for (int i = 0; i < MainWindow.Badwords.Length; i++)
+                    if (temp.Contains(MainWindow.Badwords[i]) || keyword.Contains(MainWindow.Badwords[i]))
                     {
                         return "这个Wiki被河蟹吃掉了 QAQ";
                     }

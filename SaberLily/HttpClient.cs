@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 //Http工具类
 namespace SaberLily
 {
@@ -14,7 +15,6 @@ namespace SaberLily
         public static CookieContainer cookies = new CookieContainer();
         static CookieCollection CookieCollection = new CookieCollection();
         static CookieContainer CookieContainer = new CookieContainer();
-
         public static string Get(string url, string referer = "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2", int timeout = 100000, Encoding encode = null, bool NoProxy = false)
         {
             string dat;
